@@ -15,7 +15,13 @@ import time
 # ============================================
 # タイトルと説明
 # ============================================
-st.title("Streamlit 初心者向けデモ")
+#st.title("Streamlit 初心者向けデモ")
+# タイトルの文字色を変更する 2025/4/22
+st.markdown(
+    '<h1 style="color:orange;">Streamlit 初心者向けデモ</h1>',
+    unsafe_allow_html=True
+)
+
 st.markdown("### コメントを解除しながらStreamlitの機能を学びましょう")
 st.markdown("このデモコードでは、コメントアウトされた部分を順番に解除しながらUIの変化を確認できます。")
 
@@ -41,9 +47,9 @@ st.write(f"こんにちは、{name}さん！")
 #     st.success("ボタンがクリックされました！")
 
 # チェックボックス
-# st.subheader("チェックボックス")
-# if st.checkbox("チェックを入れると追加コンテンツが表示されます"):
-#     st.info("これは隠れたコンテンツです！")
+st.subheader("チェックボックス")
+if st.checkbox("チェックを入れると追加コンテンツが表示されます"):
+  st.info("これは隠れたコンテンツです！")
 
 # スライダー
 # st.subheader("スライダー")
@@ -74,12 +80,12 @@ st.write(f"こんにちは、{name}さん！")
 #     st.metric("メトリクス", "42", "2%")
 
 # タブ
-# st.subheader("タブ")
-# tab1, tab2 = st.tabs(["第1タブ", "第2タブ"])
-# with tab1:
-#     st.write("これは第1タブの内容です")
-# with tab2:
-#     st.write("これは第2タブの内容です")
+st.subheader("タブ")
+tab1, tab2 = st.tabs(["第1タブ", "第2タブ"])
+with tab1:
+    st.write("これは第1タブの内容です")
+with tab2:
+     st.write("これは第2タブの内容です")
 
 # エクスパンダー
 # st.subheader("エクスパンダー")
