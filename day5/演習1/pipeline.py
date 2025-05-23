@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 def prepare_data():
     try:
         # Titanicデータセットの読み込み
-        path = "data/Titanic.csv"
+        path = r"C:\Users\Yokono Haruhiko\cursor\AIE\lecture-ai-engineering\day5\演習1\data\Titanic.csv"
         if not os.path.exists(path):
             raise FileNotFoundError(f"データファイルが見つかりません: {path}")
 
