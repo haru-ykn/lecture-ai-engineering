@@ -21,7 +21,7 @@ class DataLoader:
             return pd.read_csv(path)
         else:
             # ローカルのファイル
-            local_path = "C:\Users\Yokono Haruhiko\cursor\AIE\lecture-ai-engineering\day5\演習2\data\Titanic.csv"
+            local_path = r"C:\Users\Yokono Haruhiko\cursor\AIE\lecture-ai-engineering\day5\演習2\data\Titanic.csv"
             if os.path.exists(local_path):
                 return pd.read_csv(local_path)
 
@@ -287,5 +287,5 @@ if __name__ == "__main__":
     print(f"ベースライン比較: {'合格' if baseline_ok else '不合格'}")
 
     #推論時間と精度のチェック
-    def test_inference_time_and_accuracy():
+    #def test_inference_time_and_accuracy():
         
