@@ -10,6 +10,9 @@ from sklearn.impute import SimpleImputer
 import pickle
 import time
 import great_expectations as gx
+import json
+from pathlib import Path
+import sys
 
 
 class DataLoader:
@@ -258,6 +261,50 @@ class ModelTester:
         """ベースラインと比較する"""
         return current_metrics["accuracy"] >= baseline_threshold
 
+    @staticmethod
+    def save_metrics(metrics, output_dir="validation_results"):
+        """メトリクスをJSONファイルとして保存"""
+        output_path = Path(output_dir)
+        output_path.mkdir(exist_ok=True)
+        
+        # メトリクスを保存
+        metrics_data = {
+            'accuracy': metrics['accuracy'],
+            'inference_time': metrics['inference_time']
+        }
+        
+        output_file = output_path / "latest_metrics.json"
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(metrics_data, f, indent=2, ensure_ascii=False)
+        
+        return str(output_file)
+
+    @staticmethod
+    def compare_with_previous(metrics, previous_metrics_path):
+        """現在のメトリクスと過去のメトリクスを比較"""
+        if not Path(previous_metrics_path).exists():
+            return {
+                'has_previous': False,
+                'message': 'No previous metrics found'
+            }
+        
+        with open(previous_metrics_path, 'r', encoding='utf-8') as f:
+            previous_metrics = json.load(f)
+        
+        accuracy_change = metrics['accuracy'] - previous_metrics['accuracy']
+        time_change = metrics['inference_time'] - previous_metrics['inference_time']
+        
+        return {
+            'has_previous': True,
+            'current_accuracy': metrics['accuracy'],
+            'previous_accuracy': previous_metrics['accuracy'],
+            'accuracy_change': accuracy_change,
+            'current_time': metrics['inference_time'],
+            'previous_time': previous_metrics['inference_time'],
+            'time_change': time_change,
+            'is_improved': accuracy_change > 0 and time_change <= 0
+        }
+
 
 # テスト関数（pytestで実行可能）
 def test_data_validation():
@@ -303,12 +350,57 @@ def test_model_performance():
     ), f"推論時間が長すぎます: {metrics['inference_time']}秒"
 
 
+def run_workflow_validation():
+    """ワークフロー用の検証実行"""
+    # データの準備
+    data = DataLoader.load_titanic_data()
+    X, y = DataLoader.preprocess_titanic_data(data)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+    
+    # モデルの学習と評価
+    model = ModelTester.train_model(X_train, y_train)
+    metrics = ModelTester.evaluate_model(model, X_test, y_test)
+    
+    # メトリクスの保存
+    metrics_file = ModelTester.save_metrics(metrics)
+    
+    # 過去の結果との比較
+    previous_metrics_path = Path('validation_results/latest_metrics.json')
+    comparison = ModelTester.compare_with_previous(metrics, previous_metrics_path)
+    
+    # GitHub Actions用の出力
+    if comparison['has_previous']:
+        print(f"::set-output name=has_previous::true")
+        print(f"::set-output name=current_accuracy::{comparison['current_accuracy']:.4f}")
+        print(f"::set-output name=previous_accuracy::{comparison['previous_accuracy']:.4f}")
+        print(f"::set-output name=accuracy_change::{comparison['accuracy_change']:.4f}")
+        print(f"::set-output name=current_time::{comparison['current_time']:.4f}")
+        print(f"::set-output name=previous_time::{comparison['previous_time']:.4f}")
+        print(f"::set-output name=time_change::{comparison['time_change']:.4f}")
+        print(f"::set-output name=is_improved::{str(comparison['is_improved']).lower()}")
+        
+        # 比較結果の表示
+        print("\nモデル性能の比較:")
+        print(f"精度: {comparison['current_accuracy']:.4f} (前回: {comparison['previous_accuracy']:.4f}, 変化: {comparison['accuracy_change']:+.4f})")
+        print(f"推論時間: {comparison['current_time']:.4f}秒 (前回: {comparison['previous_time']:.4f}秒, 変化: {comparison['time_change']:+.4f}秒)")
+        print(f"改善: {'あり' if comparison['is_improved'] else 'なし'}")
+    else:
+        print("::set-output name=has_previous::false")
+        print("\n初回実行のため、比較は行いません")
+    
+    return 0
+
+
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == '--workflow':
+        sys.exit(run_workflow_validation())
+    
     # データロード
     data = DataLoader.load_titanic_data()
     X, y = DataLoader.preprocess_titanic_data(data)
-    # 最初の10行を表示
-    print(X.head(10))
+    
 
     # データバリデーション
     success, results = DataValidator.validate_titanic_data(X)
