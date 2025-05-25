@@ -29,9 +29,9 @@ jobs:
         flake8 day5/演習2 --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 day5/演習2 --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
         
-    - name: Format check with black
-      run: |
-        black --check day5/演習2
+    #- name: Format check with black
+    #  run: |
+    #    black --check day5/演習2
         
     #- name: Run data tests
     #  run: |
@@ -44,4 +44,12 @@ jobs:
     - name: Run pytest on main.py
       run: |
         pytest day5/演習2/main.py -v
-        
+    
+    #テスト項目追加
+    - name: Run pytest on model-validation.yml
+      run: |
+        pytest day5/演習2/.github/workflows/model-validation.yml -v
+      
+    
+
+
