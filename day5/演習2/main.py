@@ -62,15 +62,45 @@ class DataValidator:
         # Great Expectationsを使用したバリデーション
         try:
             context = gx.get_context()
-            data_source = context.data_sources.add_pandas("pandas")
-            data_asset = data_source.add_dataframe_asset(name="pd dataframe asset")
+            # オリジナル（v0.18.22以前）のコード（コメントアウト）
+            # data_source = context.data_sources.add_pandas("pandas")
+            # data_asset = data_source.add_dataframe_asset(name="pd dataframe asset")
+            # batch_definition = data_asset.add_batch_definition_whole_dataframe("batch definition")
+            # batch = batch_definition.get_batch(batch_parameters={"dataframe": data})
 
-            batch_definition = data_asset.add_batch_definition_whole_dataframe(
-                "batch definition"
+            # v0.18.22用の新しいコード
+            context.add_datasource(
+                name="my_pandas_datasource",
+                class_name="Datasource",
+                execution_engine={"class_name": "PandasExecutionEngine"},
+                data_connectors={
+                    "default_runtime_data_connector_name": {
+                        "class_name": "RuntimeDataConnector",
+                        "batch_identifiers": ["default_identifier_name"],
+                    }
+                },
             )
-            batch = batch_definition.get_batch(batch_parameters={"dataframe": data})
+
+            #batch_request = {
+            #    "datasource_name": "my_pandas_datasource",
+            #    "data_connector_name": "default_runtime_data_connector_name",
+            #    "data_asset_name": "my_data_asset",
+            #    "runtime_parameters": {"batch_data": data},
+            #    "batch_identifiers": {"default_identifier_name": "default_id"},
+            #}
+            #batch = context.get_batch(batch_request)
+            #v0.18.22用の新しいコード
+            batch = context.get_validator(
+                datasource_name="my_pandas_datasource",
+                data_connector_name="default_runtime_data_connector_name",
+                data_asset_name="my_data_asset",
+                runtime_parameters={"batch_data": data},
+                batch_identifiers={"default_identifier_name": "default_id"}
+            )
 
             results = []
+            #debug
+            print(batch)
 
             # 必須カラムの存在確認
             required_columns = [
@@ -89,27 +119,31 @@ class DataValidator:
                 print(f"警告: 以下のカラムがありません: {missing_columns}")
                 return False, [{"success": False, "missing_columns": missing_columns}]
 
-            expectations = [
-                gx.expectations.ExpectColumnDistinctValuesToBeInSet(
-                    column="Pclass", value_set=[1, 2, 3]
-                ),
-                gx.expectations.ExpectColumnDistinctValuesToBeInSet(
-                    column="Sex", value_set=["male", "female"]
-                ),
-                gx.expectations.ExpectColumnValuesToBeBetween(
-                    column="Age", min_value=0, max_value=100
-                ),
-                gx.expectations.ExpectColumnValuesToBeBetween(
-                    column="Fare", min_value=0, max_value=600
-                ),
-                gx.expectations.ExpectColumnDistinctValuesToBeInSet(
-                    column="Embarked", value_set=["C", "Q", "S", ""]
-                ),
-            ]
+            # 旧いコード（コメントアウト）
+            # expectations = [
+            #     gx.expectations.ExpectColumnDistinctValuesToBeInSet(
+            #         column="Pclass", value_set=[1, 2, 3]
+            #     ),
+            #     gx.expectations.ExpectColumnDistinctValuesToBeInSet(
+            #         column="Sex", value_set=["male", "female"]
+            #     ),
+            #     gx.expectations.ExpectColumnValuesToBeBetween(
+            #         column="Age", min_value=0, max_value=100
+            #     ),
+            #     gx.expectations.ExpectColumnValuesToBeBetween(
+            #         column="Fare", min_value=0, max_value=600
+            #     ),
+            #     gx.expectations.ExpectColumnDistinctValuesToBeInSet(
+            #         column="Embarked", value_set=["C", "Q", "S", ""]
+            #     ),
+            # ]
 
-            for expectation in expectations:
-                result = batch.validate(expectation)
-                results.append(result)
+            # v0.18.22用の新しいコード
+            results.append(batch.expect_column_distinct_values_to_be_in_set(column="Pclass", value_set=[1, 2, 3]))
+            results.append(batch.expect_column_distinct_values_to_be_in_set(column="Sex", value_set=["male", "female"]))
+            results.append(batch.expect_column_values_to_be_between(column="Age", min_value=0, max_value=100))
+            results.append(batch.expect_column_values_to_be_between(column="Fare", min_value=0, max_value=600))
+            results.append(batch.expect_column_distinct_values_to_be_in_set(column="Embarked", value_set=["C", "Q", "S", ""]))
 
             # すべての検証が成功したかチェック
             is_successful = all(result.success for result in results)
@@ -252,10 +286,13 @@ if __name__ == "__main__":
     # データロード
     data = DataLoader.load_titanic_data()
     X, y = DataLoader.preprocess_titanic_data(data)
+    #最初の10行を表示
+    print(X.head(10))
 
     # データバリデーション
     success, results = DataValidator.validate_titanic_data(X)
     print(f"データ検証結果: {'成功' if success else '失敗'}")
+
     for result in results:
         # "success": falseの場合はエラーメッセージを表示
         if not result["success"]:
@@ -263,6 +300,8 @@ if __name__ == "__main__":
     if not success:
         print("データ検証に失敗しました。処理を終了します。")
         exit(1)
+    
+    
 
     # モデルのトレーニングと評価
     X_train, X_test, y_train, y_test = train_test_split(
@@ -286,6 +325,4 @@ if __name__ == "__main__":
     baseline_ok = ModelTester.compare_with_baseline(metrics)
     print(f"ベースライン比較: {'合格' if baseline_ok else '不合格'}")
 
-    #推論時間と精度のチェック
-    #def test_inference_time_and_accuracy():
         
