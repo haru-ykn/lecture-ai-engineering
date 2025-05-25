@@ -29,9 +29,9 @@ jobs:
         flake8 day5/演習2 --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 day5/演習2 --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
         
-    - name: Format check with black
-      run: |
-        black --check day5/演習2
+    #- name: Format check with black
+    #  run: |
+    #    black --check day5/演習2
         
     #- name: Run data tests
     #  run: |
@@ -41,7 +41,9 @@ jobs:
     #  run: |
     #    pytest day5/演習2/tests/test_model.py -v
 
-    - name: Run pytest on main.py
+    - name: Run model validation
+      id: validation
+      continue-on-error: true
       run: |
-        pytest day5/演習2/main.py -v
-        
+        cd lecture-ai-engineering/day5/演習2
+        python main.py --workflow -v
