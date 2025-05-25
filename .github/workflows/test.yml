@@ -42,64 +42,8 @@ jobs:
     #    pytest day5/演習2/tests/test_model.py -v
 
     - name: Run model validation
-    id: validation
-    run: |
-      cd lecture-ai-engineering/day5/演習2
-      python main.py --workflow
-    continue-on-error: true
-  
-    - name: Upload metrics
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: model-metrics
-        path: lecture-ai-engineering/day5/演習2/validation_results/latest_metrics.json
-        if-no-files-found: error
-    
-    - name: Check model improvement
-      if: steps.validation.outputs.has_previous == 'true'
+      id: validation
+      continue-on-error: true
       run: |
-        if [ "${{ steps.validation.outputs.is_improved }}" = "true" ]; then
-          echo "::notice::Model performance improved! 🎉"
-          echo "Accuracy: ${{ steps.validation.outputs.current_accuracy }} (Change: ${{ steps.validation.outputs.accuracy_change }})"
-          echo "Inference Time: ${{ steps.validation.outputs.current_time }}s (Change: ${{ steps.validation.outputs.time_change }}s)"
-        else
-          echo "::warning::Model performance did not improve ⚠️"
-          echo "Accuracy: ${{ steps.validation.outputs.current_accuracy }} (Change: ${{ steps.validation.outputs.accuracy_change }})"
-          echo "Inference Time: ${{ steps.validation.outputs.current_time }}s (Change: ${{ steps.validation.outputs.time_change }}s)"
-        fi
-    
-    - name: Create comparison summary
-      if: steps.validation.outputs.has_previous == 'true'
-      run: |
-        echo "## Model Performance Comparison" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Accuracy" >> $GITHUB_STEP_SUMMARY
-        echo "- Current: ${{ steps.validation.outputs.current_accuracy }}" >> $GITHUB_STEP_SUMMARY
-        echo "- Previous: ${{ steps.validation.outputs.previous_accuracy }}" >> $GITHUB_STEP_SUMMARY
-        echo "- Change: ${{ steps.validation.outputs.accuracy_change }}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Inference Time" >> $GITHUB_STEP_SUMMARY
-        echo "- Current: ${{ steps.validation.outputs.current_time }}s" >> $GITHUB_STEP_SUMMARY
-        echo "- Previous: ${{ steps.validation.outputs.previous_time }}s" >> $GITHUB_STEP_SUMMARY
-        echo "- Change: ${{ steps.validation.outputs.time_change }}s" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Status" >> $GITHUB_STEP_SUMMARY
-        if [ "${{ steps.validation.outputs.is_improved }}" = "true" ]; then
-          echo "✅ Model performance improved!" >> $GITHUB_STEP_SUMMARY
-        else
-          echo "⚠️ Model performance did not improve" >> $GITHUB_STEP_SUMMARY
-        fi  
-
-    - name: Run pytest on main.py
-      run: |
-        pytest day5/演習2/main.py -v
-    
-    #テスト項目追加
-    - name: Run pytest on model-validation.yml
-      run: |
-        pytest day5/演習2/.github/workflows/model-validation.yml -v
-      
-    
-
-
+        cd lecture-ai-engineering/day5/演習2
+        python main.py --workflow -v
