@@ -11,6 +11,7 @@ import pickle
 import time
 import great_expectations as gx
 
+
 class DataLoader:
     """データロードを行うクラス"""
 
@@ -81,25 +82,25 @@ class DataValidator:
                 },
             )
 
-            #batch_request = {
+            # batch_request = {
             #    "datasource_name": "my_pandas_datasource",
             #    "data_connector_name": "default_runtime_data_connector_name",
             #    "data_asset_name": "my_data_asset",
             #    "runtime_parameters": {"batch_data": data},
             #    "batch_identifiers": {"default_identifier_name": "default_id"},
-            #}
-            #batch = context.get_batch(batch_request)
-            #v0.18.22用の新しいコード
+            # }
+            # batch = context.get_batch(batch_request)
+            # v0.18.22用の新しいコード
             batch = context.get_validator(
                 datasource_name="my_pandas_datasource",
                 data_connector_name="default_runtime_data_connector_name",
                 data_asset_name="my_data_asset",
                 runtime_parameters={"batch_data": data},
-                batch_identifiers={"default_identifier_name": "default_id"}
+                batch_identifiers={"default_identifier_name": "default_id"},
             )
 
             results = []
-            #debug
+            # debug
             print(batch)
 
             # 必須カラムの存在確認
@@ -139,11 +140,31 @@ class DataValidator:
             # ]
 
             # v0.18.22用の新しいコード
-            results.append(batch.expect_column_distinct_values_to_be_in_set(column="Pclass", value_set=[1, 2, 3]))
-            results.append(batch.expect_column_distinct_values_to_be_in_set(column="Sex", value_set=["male", "female"]))
-            results.append(batch.expect_column_values_to_be_between(column="Age", min_value=0, max_value=100))
-            results.append(batch.expect_column_values_to_be_between(column="Fare", min_value=0, max_value=600))
-            results.append(batch.expect_column_distinct_values_to_be_in_set(column="Embarked", value_set=["C", "Q", "S", ""]))
+            results.append(
+                batch.expect_column_distinct_values_to_be_in_set(
+                    column="Pclass", value_set=[1, 2, 3]
+                )
+            )
+            results.append(
+                batch.expect_column_distinct_values_to_be_in_set(
+                    column="Sex", value_set=["male", "female"]
+                )
+            )
+            results.append(
+                batch.expect_column_values_to_be_between(
+                    column="Age", min_value=0, max_value=100
+                )
+            )
+            results.append(
+                batch.expect_column_values_to_be_between(
+                    column="Fare", min_value=0, max_value=600
+                )
+            )
+            results.append(
+                batch.expect_column_distinct_values_to_be_in_set(
+                    column="Embarked", value_set=["C", "Q", "S", ""]
+                )
+            )
 
             # すべての検証が成功したかチェック
             is_successful = all(result.success for result in results)
@@ -286,7 +307,7 @@ if __name__ == "__main__":
     # データロード
     data = DataLoader.load_titanic_data()
     X, y = DataLoader.preprocess_titanic_data(data)
-    #最初の10行を表示
+    # 最初の10行を表示
     print(X.head(10))
 
     # データバリデーション
@@ -300,8 +321,6 @@ if __name__ == "__main__":
     if not success:
         print("データ検証に失敗しました。処理を終了します。")
         exit(1)
-    
-    
 
     # モデルのトレーニングと評価
     X_train, X_test, y_train, y_test = train_test_split(
@@ -324,5 +343,3 @@ if __name__ == "__main__":
     # ベースラインとの比較
     baseline_ok = ModelTester.compare_with_baseline(metrics)
     print(f"ベースライン比較: {'合格' if baseline_ok else '不合格'}")
-
-        
