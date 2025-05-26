@@ -45,5 +45,4 @@ jobs:
       id: validation
       continue-on-error: true
       run: |
-        cd lecture-ai-engineering/day5/演習2
         python main.py --workflow -v
